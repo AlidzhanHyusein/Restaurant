@@ -1,6 +1,6 @@
 package com.restaurant.entity;
 
-public enum Status {
+public enum OrderStatus {
     COMPLETED,
     ACTIVE
 }
