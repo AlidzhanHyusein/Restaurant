@@ -23,7 +23,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.customer.id = :customerId AND o.status = 'ACTIVE'")
     BigDecimal calculateTotalDebtByCustomerId(@Param("customerId") Long customerId);
 
-    List<Order> findByStatusAfterOrderByCreatedAtDesc(OrderStatus status);
+    List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
 
     long countByCustomerIdAndStatus(Long customerId, OrderStatus status);
 

@@ -9,6 +9,7 @@ import com.restaurant.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -19,10 +20,41 @@ public class OrderServiceImpl implements OrderService {
     private final CustomerServiceImpl customerService;
 
     @Override
-    public Order createOrder(Order order) {
-        Order orderToSave = orderRepository.save(order);
-        orderToSave.setCustomer(customerService.findByCustomerById(order.getCustomer().getId()));
-        return orderToSave;
+    public Order createOrder(Order order,Long customerId) {
+
+        if(order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0){
+            throw new IllegalArgumentException("Total amount cannot be negative or zero");
+        }
+
+        Customer customer = customerService.findByCustomerById(customerId);
+
+        order.setCustomer(customer);
+        order.setStatus(OrderStatus.ACTIVE);
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public Order createOrder(Order order, Customer customer) {
+
+        if(order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0){
+            throw new IllegalArgumentException("Total amount cannot be negative or zero");
+        }
+
+        Customer customer1;
+        if(customer.getId() == null){
+
+            Customer customer2 = customerService.createCustomer(customer);
+            order.setCustomer(customer2);
+            order.setStatus(OrderStatus.ACTIVE);
+            return orderRepository.save(order);
+        } else{
+            customer1 = customerService.findByCustomerById(customer.getId());
+
+        }
+
+        order.setCustomer(customer1);
+        order.setStatus(OrderStatus.ACTIVE);
+        return orderRepository.save(order);
     }
 
     @Override
@@ -52,5 +84,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void deleteById(Long id) {
         orderRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Order> getAllActiveOrders() {
+        return orderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.ACTIVE);
     }
 }
