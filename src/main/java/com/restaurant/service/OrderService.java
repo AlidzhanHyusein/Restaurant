@@ -14,4 +14,6 @@ public interface OrderService {
     Order markOrderAsCompleted(Long id);
     void deleteById(Long id);
     List<Order> getAllActiveOrders();
+
+
 }
