@@ -7,6 +7,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -25,8 +27,9 @@ public class Order {
     @JoinColumn(name = "customer_id",nullable = false)
     private Customer customer;
 
-    @Column(name = "total_amount",nullable = false,precision = 10,scale = 2)
-    private BigDecimal totalAmount;
+    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL,orphanRemoval = true)
+    @Builder.Default
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,4 +42,12 @@ public class Order {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+
+    public BigDecimal calculateTotalAmount(){
+        if(orderItems == null || orderItems.isEmpty()){
+            return BigDecimal.ZERO;
+        }
+        return orderItems.stream().map(OrderItem::getSubtotal).reduce(BigDecimal.ZERO,BigDecimal::add);
+    }
 }
