@@ -1,15 +1,17 @@
 package com.restaurant.service.impl;
 
 
-import com.restaurant.entity.Customer;
-import com.restaurant.entity.Order;
-import com.restaurant.entity.OrderStatus;
+import com.restaurant.dto.OrderItemRequest;
+import com.restaurant.entity.*;
 import com.restaurant.repository.OrderRepository;
+import com.restaurant.service.CustomerService;
+import com.restaurant.service.MenuItemService;
 import com.restaurant.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -17,44 +19,60 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final CustomerServiceImpl customerService;
+    private final CustomerService customerService;
+    private final MenuItemService menuItemService;
 
     @Override
-    public Order createOrder(Order order,Long customerId) {
-
-        if(order.calculateTotalAmount().compareTo(BigDecimal.ZERO) <= 0){
-            throw new IllegalArgumentException("Total amount cannot be negative or zero");
+    public Order createOrder(Long customerId, List<OrderItemRequest> items) {
+        if (items == null || items.isEmpty()) {
+            throw new IllegalArgumentException("Order cannot be empty");
         }
 
         Customer customer = customerService.findByCustomerById(customerId);
 
-        order.setCustomer(customer);
-        order.setStatus(OrderStatus.ACTIVE);
+        Order order = Order.builder()
+                .customer(customer)
+                .status(OrderStatus.ACTIVE)
+                .build();
+
+        for (OrderItemRequest itemRequest : items) {
+            // Validate quantity
+            if (itemRequest.getQuantity() == null || itemRequest.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Quantity must be positive");
+            }
+
+            MenuItem menuItem = menuItemService.findMenuItemById(itemRequest.getMenuItemId());
+
+            OrderItem orderItem = OrderItem.builder()
+                    .menuItem(menuItem)
+                    .quantity(itemRequest.getQuantity())
+                    .priceAtTime(menuItem.getPrice())
+                    .order(order)
+                    .build();
+
+            order.getOrderItems().add(orderItem);
+        }
+
         return orderRepository.save(order);
     }
 
-    @Override
-    public Order createOrder(Order order, Customer customer) {
 
-        if(order.calculateTotalAmount().compareTo(BigDecimal.ZERO) <= 0){
-            throw new IllegalArgumentException("Total amount cannot be negative or zero");
+    public Order createOrder(String customerName, List<OrderItemRequest> items) {
+        if(items == null || items.isEmpty()){
+            throw new IllegalArgumentException("Order cannot be empty");
+        }
+        if(customerName == null || customerName.isBlank()){
+            throw new IllegalArgumentException("Customer name cannot be null or blank");
         }
 
-        Customer customer1;
-        if(customer.getId() == null){
+        Customer customer = customerService.findByCustomerByName(customerName);
 
-            Customer customer2 = customerService.createCustomer(customer);
-            order.setCustomer(customer2);
-            order.setStatus(OrderStatus.ACTIVE);
-            return orderRepository.save(order);
-        } else{
-            customer1 = customerService.findByCustomerById(customer.getId());
-
+        if(customer == null){
+            customer = Customer.builder().name(customerName).build();
+            customer = customerService.createCustomer(customer);
         }
 
-        order.setCustomer(customer1);
-        order.setStatus(OrderStatus.ACTIVE);
-        return orderRepository.save(order);
+        return createOrder(customer.getId(), items);
     }
 
     @Override
