@@ -22,7 +22,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order createOrder(Order order,Long customerId) {
 
-        if(order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0){
+        if(order.calculateTotalAmount().compareTo(BigDecimal.ZERO) <= 0){
             throw new IllegalArgumentException("Total amount cannot be negative or zero");
         }
 
@@ -36,7 +36,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order createOrder(Order order, Customer customer) {
 
-        if(order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0){
+        if(order.calculateTotalAmount().compareTo(BigDecimal.ZERO) <= 0){
             throw new IllegalArgumentException("Total amount cannot be negative or zero");
         }
 

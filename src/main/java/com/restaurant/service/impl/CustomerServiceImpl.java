@@ -47,7 +47,7 @@ public class CustomerServiceImpl implements CustomerService {
     public BigDecimal calculateTotalDebtByCustomerId(Long customerId) {
         Customer customer = findByCustomerById(customerId);
 
-        List<BigDecimal> totalAmount = customer.getOrder().stream().map(order -> order.getStatus() == OrderStatus.ACTIVE ? order.getTotalAmount() : BigDecimal.ZERO).toList();
+        List<BigDecimal> totalAmount = customer.getOrder().stream().map(order -> order.getStatus() == OrderStatus.ACTIVE ? order.calculateTotalAmount() : BigDecimal.ZERO).toList();
 
         return totalAmount.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
     }

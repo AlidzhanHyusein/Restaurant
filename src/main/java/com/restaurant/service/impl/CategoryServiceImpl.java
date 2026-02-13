@@ -12,7 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
-    CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public Category createCategory(Category category) {
@@ -53,6 +53,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category updateCategory(Long categoryId, String newName) {
+
+        if (newName == null || newName.isBlank()) {
+            throw new IllegalArgumentException("Category name cannot be null or blank");
+        }
+
         Category category = getCategoryById(categoryId);
         category.setName(newName);
         return categoryRepository.save(category);
@@ -61,6 +66,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteCategoryById(Long id) {
         Category category = getCategoryById(id);
+        if(!category.getMenuItems().isEmpty()){
+            throw new IllegalArgumentException("Cannot delete category with menu items");
+        }
         categoryRepository.delete(category);
     }
 
