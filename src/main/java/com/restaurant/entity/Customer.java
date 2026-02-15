@@ -1,5 +1,6 @@
 package com.restaurant.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -12,6 +13,7 @@ import java.util.List;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter
 @Table(name = "customers")
@@ -25,15 +27,8 @@ public class Customer {
     @Column(nullable = false)
     private String name;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,orphanRemoval = true)
-    private List<Order> order = new ArrayList<>();
-
+    @OneToMany(mappedBy = "customer", orphanRemoval = false)
+    @Builder.Default
+    @JsonIgnoreProperties("customer")
+    private List<Order> orders = new ArrayList<>();
 }

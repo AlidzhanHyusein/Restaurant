@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -20,12 +22,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByCustomerIdAndStatusAfterOrderByCreatedAtDesc(Long customerId, OrderStatus orderStatusAfter);
 
-    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.customer.id = :customerId AND o.status = 'ACTIVE'")
-    BigDecimal calculateTotalDebtByCustomerId(@Param("customerId") Long customerId);
+    List<Order> findByStatusAndUpdatedAtBetween(OrderStatus status, LocalDateTime from, LocalDateTime to);
 
     List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
 
     long countByCustomerIdAndStatus(Long customerId, OrderStatus status);
 
+    List<Order> findByStatusAndCreatedAtAfter(OrderStatus orderStatus, LocalDateTime since);
 }
 

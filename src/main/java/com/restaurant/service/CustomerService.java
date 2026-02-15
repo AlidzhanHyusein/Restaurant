@@ -1,5 +1,6 @@
 package com.restaurant.service;
 
+import com.restaurant.dto.CustomerRequest;
 import com.restaurant.entity.Customer;
 
 import java.math.BigDecimal;
@@ -13,4 +14,7 @@ public interface CustomerService {
     List<Customer> findAll();
     BigDecimal calculateTotalDebtByCustomerId(Long customerId);
     void deleteById(Long id);
+    Customer createCustomer(CustomerRequest request);
+    Customer getCustomerById(Long id);
+
 }
