@@ -1,5 +1,6 @@
 package com.restaurant.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +9,7 @@ import java.math.BigDecimal;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter
 @Builder
@@ -20,10 +22,12 @@ public class OrderItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id",nullable = false)
+    @JsonIgnoreProperties("orderItems")
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "menu_item_id",nullable = false)
+    @JsonIgnoreProperties("orderItem")
     private MenuItem menuItem;
 
     @Column(nullable = false)
@@ -31,6 +35,10 @@ public class OrderItem {
 
     @Column(nullable = false,precision = 10,scale = 2)
     private BigDecimal priceAtTime;
+
+    @Column(nullable = false)
+    private BigDecimal subtotal;
+
 
     public BigDecimal getSubtotal() {
         if (priceAtTime == null || quantity == null) {

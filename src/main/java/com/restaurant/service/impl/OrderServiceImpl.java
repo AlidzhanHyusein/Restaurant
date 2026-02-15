@@ -1,6 +1,7 @@
 package com.restaurant.service.impl;
 
 
+import com.restaurant.dto.CustomerRequest;
 import com.restaurant.dto.OrderItemRequest;
 import com.restaurant.entity.*;
 import com.restaurant.repository.OrderRepository;
@@ -11,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order createOrder(Long customerId, List<OrderItemRequest> items) {
+
         if (items == null || items.isEmpty()) {
             throw new IllegalArgumentException("Order cannot be empty");
         }
@@ -36,7 +38,36 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         for (OrderItemRequest itemRequest : items) {
-            // Validate quantity
+            if (itemRequest.getQuantity() == null || itemRequest.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Quantity must be positive");
+            }
+
+            MenuItem menuItem = menuItemService.findMenuItemById(itemRequest.getMenuItemId());
+
+            OrderItem orderItem = OrderItem.builder()
+                    .menuItem(menuItem)
+                    .quantity(itemRequest.getQuantity())
+                    .priceAtTime(menuItem.getPrice())
+                    .order(order)
+                    .build();
+
+            order.getOrderItems().add(orderItem);
+        }
+
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public Order updateOrderItems(Long orderId, List<OrderItemRequest> items) {
+        Order order = findById(orderId);
+
+        if (items == null || items.isEmpty()) {
+            throw new IllegalArgumentException("Order must have at least one item");
+        }
+
+        order.getOrderItems().clear();
+
+        for (OrderItemRequest itemRequest : items) {
             if (itemRequest.getQuantity() == null || itemRequest.getQuantity() <= 0) {
                 throw new IllegalArgumentException("Quantity must be positive");
             }
@@ -57,23 +88,25 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
-    public Order createOrder(String customerName, List<OrderItemRequest> items) {
-        if(items == null || items.isEmpty()){
+
+    @Override
+    public Order createOrderWithNewCustomer(CustomerRequest customerRequest,
+                                            List<OrderItemRequest> items) {
+
+        if (customerRequest == null) {
+            throw new IllegalArgumentException("Customer cannot be null");
+        }
+
+        if (items == null || items.isEmpty()) {
             throw new IllegalArgumentException("Order cannot be empty");
         }
-        if(customerName == null || customerName.isBlank()){
-            throw new IllegalArgumentException("Customer name cannot be null or blank");
-        }
 
-        Customer customer = customerService.findByCustomerByName(customerName);
+        Customer savedCustomer = customerService.createCustomer(customerRequest);
 
-        if(customer == null){
-            customer = Customer.builder().name(customerName).build();
-            customer = customerService.createCustomer(customer);
-        }
-
-        return createOrder(customer.getId(), items);
+        return createOrder(savedCustomer.getId(), items);
     }
+
+
 
     @Override
     public Order findById(Long id) {
@@ -97,6 +130,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = findById(id);
         order.setStatus(OrderStatus.COMPLETED);
         return orderRepository.save(order);
+
     }
 
     @Override

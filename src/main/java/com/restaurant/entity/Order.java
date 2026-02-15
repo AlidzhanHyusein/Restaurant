@@ -1,5 +1,7 @@
 package com.restaurant.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,6 +15,7 @@ import java.util.List;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter
 @Table(name = "orders")
@@ -23,25 +26,30 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id",nullable = false)
+    @JoinColumn(name = "customer_id")
+    @JsonIgnoreProperties("orders")
     private Customer customer;
 
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL,orphanRemoval = true)
-    @Builder.Default
-    private List<OrderItem> orderItems = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonIgnoreProperties("order")
+    private List<OrderItem> orderItems = new ArrayList<>();
+
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
+
 
 
     public BigDecimal calculateTotalAmount(){

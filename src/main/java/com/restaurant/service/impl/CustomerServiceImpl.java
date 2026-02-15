@@ -1,5 +1,6 @@
 package com.restaurant.service.impl;
 
+import com.restaurant.dto.CustomerRequest;
 import com.restaurant.entity.Customer;
 import com.restaurant.entity.OrderStatus;
 import com.restaurant.repository.CustomerRepository;
@@ -47,15 +48,38 @@ public class CustomerServiceImpl implements CustomerService {
     public BigDecimal calculateTotalDebtByCustomerId(Long customerId) {
         Customer customer = findByCustomerById(customerId);
 
-        List<BigDecimal> totalAmount = customer.getOrder().stream().map(order -> order.getStatus() == OrderStatus.ACTIVE ? order.calculateTotalAmount() : BigDecimal.ZERO).toList();
+        List<BigDecimal> totalAmount = customer.getOrders().stream().map(order -> order.getStatus() == OrderStatus.ACTIVE ? order.calculateTotalAmount() : BigDecimal.ZERO).toList();
 
         return totalAmount.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override
     public void deleteById(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
-        Customer customer = findByCustomerById(id);
+        if (!customer.getOrders().isEmpty()) {
+            throw new IllegalStateException("Cannot delete customer with existing orders");
+        }
+
         customerRepository.delete(customer);
     }
+
+    @Override
+    public Customer createCustomer(CustomerRequest request) {
+        Customer customer = Customer.builder()
+                .name(request.getName())
+                .build();
+
+        return customerRepository.save(customer);
+    }
+
+    @Override
+    public Customer getCustomerById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Customer id cannot be null");
+        }
+        return customerRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+    }
+
 }
